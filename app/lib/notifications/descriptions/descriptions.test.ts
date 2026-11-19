@@ -52,7 +52,108 @@ describe("describeNotification", () => {
         notification("comment-reply", { actorName: "Jo Park" })
       );
 
-      expect(result).toEqual({ text: "You have a new Notification", href: null });
+      expect(result).toEqual({
+        text: "You have a new Notification",
+        href: null,
+      });
+    });
+  });
+
+  describe("New sale", () => {
+    it("names the buyer and the course for an Individual Purchase", () => {
+      const result = describeNotification(
+        notification("new-sale", {
+          buyerName: "Alex Rivera",
+          courseTitle: "JavaScript Basics",
+          seats: null,
+        })
+      );
+
+      expect(result).toEqual({
+        text: "Alex Rivera bought JavaScript Basics",
+        href: "/instructor/analytics",
+      });
+    });
+
+    it("counts the Seats of a Team Licence", () => {
+      const result = describeNotification(
+        notification("new-sale", {
+          buyerName: "Alex Rivera",
+          courseTitle: "JavaScript Basics",
+          seats: 10,
+        })
+      );
+
+      expect(result).toEqual({
+        text: "Alex Rivera bought 10 Seats on JavaScript Basics",
+        href: "/instructor/analytics",
+      });
+    });
+
+    it("says one Seat in the singular", () => {
+      const result = describeNotification(
+        notification("new-sale", {
+          buyerName: "Alex Rivera",
+          courseTitle: "JavaScript Basics",
+          seats: 1,
+        })
+      );
+
+      expect(result.text).toBe(
+        "Alex Rivera bought 1 Seat on JavaScript Basics"
+      );
+    });
+  });
+
+  describe("Seat claimed (Instructor)", () => {
+    it("names the Student and whose Team Licence, and links to the Students page", () => {
+      const result = describeNotification(
+        notification("seat-claimed-instructor", {
+          studentName: "Sam Okafor",
+          courseTitle: "JavaScript Basics",
+          courseId: 7,
+          teamAdminName: "Alex Rivera",
+        })
+      );
+
+      expect(result).toEqual({
+        text: "Sam Okafor joined JavaScript Basics through Alex Rivera's Team Licence",
+        href: "/instructor/7/students",
+      });
+    });
+  });
+
+  describe("Seat claimed (Team Admin)", () => {
+    it("says how many Seats are left, and links to the Team page", () => {
+      const result = describeNotification(
+        notification("seat-claimed-team-admin", {
+          studentName: "Sam Okafor",
+          courseTitle: "JavaScript Basics",
+          seatsLeft: 7,
+          seats: 10,
+        })
+      );
+
+      expect(result).toEqual({
+        text: "Sam Okafor claimed a Seat on JavaScript Basics: 7 of 10 left",
+        href: "/team",
+      });
+    });
+
+    it("says when the last Seat is gone", () => {
+      const result = describeNotification(
+        notification("seat-claimed-team-admin", {
+          studentName: "Ava Kim",
+          courseTitle: "JavaScript Basics",
+          seatsLeft: 0,
+          seats: 10,
+        })
+      );
+
+      expect(result).toEqual({
+        text: "Ava Kim claimed the last Seat on JavaScript Basics",
+        href: "/team",
+      });
     });
   });
 
