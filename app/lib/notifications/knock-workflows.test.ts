@@ -26,4 +26,18 @@ describe("Knock workflows", () => {
       ]);
     }
   });
+
+  // Knock rejects an in-app template without exactly one of action_url and
+  // action_buttons. Cadence builds each row's link from the data (ADR 0013),
+  // so the URL is a placeholder the bell never reads.
+  it("gives every in-app template the action_url Knock requires", () => {
+    for (const key of readdirSync(WORKFLOWS)) {
+      const workflow = JSON.parse(
+        readFileSync(join(WORKFLOWS, key, "workflow.json"), "utf8")
+      );
+      const template = workflow.steps[0].template;
+      expect(typeof template.action_url, key).toBe("string");
+      expect(template.action_buttons, key).toBeUndefined();
+    }
+  });
 });

@@ -11,7 +11,8 @@
       "name": "In-app",
       "channel_key": "in-app",
       "template": {
-        "markdown_body": "New question"
+        "markdown_body": "New question",
+        "action_url": "/"
       }
     }
   ]
