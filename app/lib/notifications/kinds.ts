@@ -26,20 +26,21 @@ export type NotificationKind =
 
 /** The human name of each kind, shown next to a Notification's time. */
 export const NOTIFICATION_KIND_LABELS: Record<NotificationKind, string> = {
-  "refund-request-approved": "Refund Request approved",
-  "refund-request-declined": "Refund Request declined",
-  "comment-reply": "Reply to your comment",
-  "new-lesson": "New lesson",
-  "inactive-on-course": "Inactive on a course",
-  "new-question": "New question",
-  "new-rating": "New rating",
-  "course-status-changed": "Course status changed",
-  "new-sale": "New sale",
-  "seat-claimed-instructor": "Seat claimed",
-  "refund-approved-on-your-course": "Refund approved on your course",
-  "refund-request-to-decide": "Refund Request to decide",
-  "course-published": "Course published",
-  "seat-claimed-team-admin": "Seat claimed",
+  [NotificationKind.RefundRequestApproved]: "Refund Request approved",
+  [NotificationKind.RefundRequestDeclined]: "Refund Request declined",
+  [NotificationKind.CommentReply]: "Reply to your comment",
+  [NotificationKind.NewLesson]: "New lesson",
+  [NotificationKind.InactiveOnCourse]: "Inactive on a course",
+  [NotificationKind.NewQuestion]: "New question",
+  [NotificationKind.NewRating]: "New rating",
+  [NotificationKind.CourseStatusChanged]: "Course status changed",
+  [NotificationKind.NewSale]: "New sale",
+  [NotificationKind.SeatClaimedInstructor]: "Seat claimed",
+  [NotificationKind.RefundApprovedOnYourCourse]:
+    "Refund approved on your course",
+  [NotificationKind.RefundRequestToDecide]: "Refund Request to decide",
+  [NotificationKind.CoursePublished]: "Course published",
+  [NotificationKind.SeatClaimedTeamAdmin]: "Seat claimed",
 };
 
 export function isNotificationKind(value: string): value is NotificationKind {
