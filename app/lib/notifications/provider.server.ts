@@ -1,4 +1,5 @@
 import type { NotificationKind } from "./kinds";
+import { knockProvider } from "./knock-provider.server";
 import { localFolderProvider } from "./local-folder-provider.server";
 
 // ─── Notification provider ───
@@ -47,11 +48,45 @@ export interface NotificationProvider {
 
 const LOCAL_FOLDER = ".notifications";
 
+type Env = Record<string, string | undefined>;
+
 /**
- * Picks the adapter. Reads the environment at call time, like the mailer.
- * Until the Knock adapter lands (#23) every checkout writes to the local
- * folder.
+ * Picks the adapter: Knock when the four Knock keys are set (the recipient
+ * prefix may be empty), otherwise the local folder. Reads the environment at
+ * call time, like the mailer.
  */
-export function defaultProvider(): NotificationProvider {
-  return localFolderProvider(LOCAL_FOLDER);
+export function defaultProvider(env: Env = loadEnv()): NotificationProvider {
+  const secretApiKey = env.KNOCK_SECRET_API_KEY;
+  const publicApiKey = env.KNOCK_PUBLIC_API_KEY;
+  const signingKey = env.KNOCK_SIGNING_KEY;
+  const feedChannelId = env.KNOCK_FEED_CHANNEL_ID;
+  if (!secretApiKey || !publicApiKey || !signingKey || !feedChannelId) {
+    return localFolderProvider(LOCAL_FOLDER);
+  }
+  return knockProvider({
+    secretApiKey,
+    publicApiKey,
+    signingKey,
+    feedChannelId,
+    recipientPrefix: env.KNOCK_RECIPIENT_PREFIX ?? "",
+  });
+}
+
+let envLoaded = false;
+
+/**
+ * `process.env` with the checkout's `.env` merged in, once. Neither Vite nor
+ * react-router-serve puts `.env` into `process.env` for server code.
+ * Variables already set in the real environment win.
+ */
+function loadEnv(): Env {
+  if (!envLoaded) {
+    envLoaded = true;
+    try {
+      process.loadEnvFile(".env");
+    } catch {
+      // No .env: the real environment is all there is.
+    }
+  }
+  return process.env;
 }

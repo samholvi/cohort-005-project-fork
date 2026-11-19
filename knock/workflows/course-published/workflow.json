@@ -1,0 +1,18 @@
+{
+  "name": "Course published",
+  "description": "Cadence kind \"course-published\". Cadence renders the text itself, so the template is a placeholder.",
+  "categories": [
+    "cadence"
+  ],
+  "steps": [
+    {
+      "ref": "in_app_feed_1",
+      "type": "channel",
+      "name": "In-app",
+      "channel_key": "in-app",
+      "template": {
+        "markdown_body": "Course published"
+      }
+    }
+  ]
+}

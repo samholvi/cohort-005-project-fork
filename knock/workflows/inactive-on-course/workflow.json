@@ -1,0 +1,18 @@
+{
+  "name": "Inactive on a course",
+  "description": "Cadence kind \"inactive-on-course\". Cadence renders the text itself, so the template is a placeholder.",
+  "categories": [
+    "cadence"
+  ],
+  "steps": [
+    {
+      "ref": "in_app_feed_1",
+      "type": "channel",
+      "name": "In-app",
+      "channel_key": "in-app",
+      "template": {
+        "markdown_body": "Inactive on a course"
+      }
+    }
+  ]
+}
