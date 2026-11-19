@@ -121,6 +121,22 @@ describe("describeNotification", () => {
         href: "/instructor/7/students",
       });
     });
+
+    it("leaves out whose Team Licence when the Team Admin is unknown", () => {
+      const result = describeNotification(
+        notification("seat-claimed-instructor", {
+          studentName: "Sam Okafor",
+          courseTitle: "JavaScript Basics",
+          courseId: 7,
+          teamAdminName: null,
+        })
+      );
+
+      expect(result).toEqual({
+        text: "Sam Okafor joined JavaScript Basics through a Team Licence",
+        href: "/instructor/7/students",
+      });
+    });
   });
 
   describe("Seat claimed (Team Admin)", () => {

@@ -232,6 +232,35 @@ describe("notifySeatClaimed", () => {
     ).resolves.toBeUndefined();
   });
 
+  it("still tells the Instructor when the Team Admin is missing", async () => {
+    const admin = addUser("Alex Rivera", "alex@example.com");
+    const { seats } = teamLicence(admin.id, 3);
+    claim(seats[0].id, base.user.id);
+    db.$client.pragma("foreign_keys = OFF");
+    db.delete(schema.users).where(eq(schema.users.id, admin.id)).run();
+    const provider = fakeProvider();
+
+    await notifySeatClaimed(db, seats[0].id, NOW, provider);
+
+    expect(provider.sent).toEqual([
+      {
+        kind: "seat-claimed-instructor",
+        recipients: [{ id: base.instructor.id, ...instructor }],
+        data: {
+          studentName: "Test User",
+          courseTitle: "Test Course",
+          courseId: base.course.id,
+          teamAdminName: null,
+        },
+        actor: {
+          id: base.user.id,
+          name: "Test User",
+          email: "test@example.com",
+        },
+      },
+    ]);
+  });
+
   it("still tells the Team Admin when the Instructor's delivery fails", async () => {
     const admin = addUser("Alex Rivera", "alex@example.com");
     const { seats } = teamLicence(admin.id, 3);

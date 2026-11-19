@@ -45,7 +45,7 @@ export function notifyNewSale(
     const instructor = getPerson(db, sale.instructorId);
     if (!buyer || !instructor) return;
 
-    const seats = seatCount(db, purchaseId);
+    const seats = teamLicenceSeatCount(db, purchaseId);
     const data: NewSaleData = {
       buyerName: buyer.name,
       courseTitle: sale.courseTitle,
@@ -97,19 +97,19 @@ export function notifySeatClaimed(
     const student = getPerson(db, seat.studentId);
     const instructor = getPerson(db, seat.instructorId);
     const teamAdmin = getPerson(db, seat.teamAdminId);
-    if (!student || !teamAdmin) return;
+    if (!student) return;
 
     const forInstructor: SeatClaimedInstructorData = {
       studentName: student.name,
       courseTitle: seat.courseTitle,
       courseId: seat.courseId,
-      teamAdminName: teamAdmin.name,
+      teamAdminName: teamAdmin?.name ?? null,
     };
     const forTeamAdmin: SeatClaimedTeamAdminData = {
       studentName: student.name,
       courseTitle: seat.courseTitle,
       seatsLeft: unclaimedSeatCount(db, seat.purchaseId),
-      seats: seatCount(db, seat.purchaseId),
+      seats: teamLicenceSeatCount(db, seat.purchaseId),
     };
 
     // Separate wrappers: a failed delivery to one never blocks the other.
@@ -127,20 +127,25 @@ export function notifySeatClaimed(
         );
       }
     );
-    await notifyInBackground(NotificationKind.SeatClaimedTeamAdmin, now, () =>
-      sendWithRetries(
-        provider,
-        NotificationKind.SeatClaimedTeamAdmin,
-        [teamAdmin],
-        forTeamAdmin,
-        student
-      )
+    await notifyInBackground(
+      NotificationKind.SeatClaimedTeamAdmin,
+      now,
+      async () => {
+        if (!teamAdmin) return;
+        await sendWithRetries(
+          provider,
+          NotificationKind.SeatClaimedTeamAdmin,
+          [teamAdmin],
+          forTeamAdmin,
+          student
+        );
+      }
     );
   });
 }
 
 /** How many Seats a Purchase granted: 0 for an Individual Purchase. */
-function seatCount(db: Db, purchaseId: number): number {
+function teamLicenceSeatCount(db: Db, purchaseId: number): number {
   const row = db
     .select({ seats: count() })
     .from(schema.coupons)

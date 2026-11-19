@@ -18,7 +18,8 @@ export const seatClaimedInstructorData = z.object({
   studentName: z.string(),
   courseTitle: z.string(),
   courseId: z.number().int(),
-  teamAdminName: z.string(),
+  /** Null when the Team Admin can't be found; the text then leaves them out. */
+  teamAdminName: z.string().nullable(),
 });
 
 export type SeatClaimedInstructorData = z.infer<
@@ -34,7 +35,7 @@ export const seatClaimedTeamAdminData = z.object({
 
 export type SeatClaimedTeamAdminData = z.infer<typeof seatClaimedTeamAdminData>;
 
-function seatCount(seats: number): string {
+function formatSeats(seats: number): string {
   return seats === 1 ? "1 Seat" : `${seats} Seats`;
 }
 
@@ -43,11 +44,14 @@ export const salesDescribers: KindDescribers = {
     text:
       data.seats === null
         ? `${data.buyerName} bought ${data.courseTitle}`
-        : `${data.buyerName} bought ${seatCount(data.seats)} on ${data.courseTitle}`,
+        : `${data.buyerName} bought ${formatSeats(data.seats)} on ${data.courseTitle}`,
     href: "/instructor/analytics",
   })),
   "seat-claimed-instructor": defineKind(seatClaimedInstructorData, (data) => ({
-    text: `${data.studentName} joined ${data.courseTitle} through ${data.teamAdminName}'s Team Licence`,
+    text:
+      data.teamAdminName === null
+        ? `${data.studentName} joined ${data.courseTitle} through a Team Licence`
+        : `${data.studentName} joined ${data.courseTitle} through ${data.teamAdminName}'s Team Licence`,
     href: `/instructor/${data.courseId}/students`,
   })),
   "seat-claimed-team-admin": defineKind(seatClaimedTeamAdminData, (data) => ({
