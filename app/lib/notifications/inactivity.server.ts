@@ -12,7 +12,9 @@ import { defaultProvider, type NotificationProvider } from "./provider.server";
 
 // ─── Inactive on a course ───
 // There is no scheduler: the app layout loader calls runInactivityCheck for
-// the signed-in Student on every visit, without awaiting it. An Enrollment is
+// the signed-in Student on every visit, without awaiting it, and the check
+// defers itself to a later turn of the event loop so even its database work
+// runs after the loader has moved on. An Enrollment is
 // due when its course is Published, the Student hasn't Finished it, and their
 // last watch on it (or enrolledAt, if they never watched) is 7 or more days
 // before `now`. Each stretch of inactivity is nudged once: claiming sets
@@ -36,6 +38,7 @@ export function runInactivityCheck(
     NotificationKind.InactiveOnCourse,
     now,
     async () => {
+      await nextTurn();
       const claimed = claimDueEnrollments(db, userId, now);
       if (claimed.length === 0) return;
 
@@ -48,7 +51,7 @@ export function runInactivityCheck(
             `${NotificationKind.InactiveOnCourse} course ${courseId}`,
             now,
             async () => {
-              const data = describeProgress(db, userId, courseId);
+              const data = buildInactiveOnCourseData(db, userId, courseId);
               if (!data) return;
               await sendWithRetries(
                 provider,
@@ -62,6 +65,11 @@ export function runInactivityCheck(
       );
     }
   );
+}
+
+/** Resolves on a later turn of the event loop, after pending I/O callbacks. */
+function nextTurn(): Promise<void> {
+  return new Promise((resolve) => setImmediate(resolve));
 }
 
 /**
@@ -118,11 +126,11 @@ function claimDueEnrollments(db: Db, userId: number, now: Date): number[] {
 }
 
 /**
- * The course's next lesson (first incomplete one in course order) and the
+ * The nudge's data: the course's next lesson (first incomplete one in course order) and the
  * share of lessons complete, rounded down so an unfinished course never reads
  * 100%. Null when the course has no incomplete lesson left.
  */
-function describeProgress(
+function buildInactiveOnCourseData(
   db: Db,
   userId: number,
   courseId: number

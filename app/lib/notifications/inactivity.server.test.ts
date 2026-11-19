@@ -251,6 +251,21 @@ describe("runInactivityCheck", () => {
     expect(provider.sent).toEqual([]);
   });
 
+  it("doesn't touch the database before the caller's next line runs", async () => {
+    enroll(base.user.id, base.course.id, 30);
+    const provider = fakeProvider();
+
+    const check = runInactivityCheck(db, base.user.id, NOW, provider);
+    const claimedBeforeDeferral = db
+      .select({ at: schema.enrollments.inactivityNotifiedAt })
+      .from(schema.enrollments)
+      .get()?.at;
+    await check;
+
+    expect(claimedBeforeDeferral).toBeNull();
+    expect(provider.sent).toHaveLength(1);
+  });
+
   it("nudges once per stretch, even when the check runs twice at once", async () => {
     enroll(base.user.id, base.course.id, 30);
     const provider = fakeProvider();
