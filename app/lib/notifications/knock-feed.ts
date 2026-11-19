@@ -15,12 +15,40 @@ import type { Notification } from "./kinds";
 
 const PAGE_SIZE = 50;
 
+/** The `provider` of a FeedSession this adapter serves. */
+export const KNOCK_PROVIDER = "knock";
+
 const knockSettings = z.object({
   publicApiKey: z.string().min(1),
   feedChannelId: z.string().min(1),
   userId: z.string().min(1),
   userToken: z.string().min(1),
 });
+
+/**
+ * Which feed a FeedSession's settings open. A new key means a different feed
+ * (another user), so the caller remounts and never shows the previous user's
+ * Notifications; a refreshed token keeps the key.
+ */
+export function knockFeedKey(settings: Record<string, string>): string {
+  return settings.userId ?? "";
+}
+
+function authenticate(
+  knock: Knock,
+  userId: string,
+  userToken: string | undefined
+) {
+  knock.authenticate({ id: userId }, userToken, {
+    identificationStrategy: "skip",
+  });
+}
+
+function logFailure(what: string) {
+  return (error: unknown) => {
+    console.error(`[notifications] could not ${what}`, error);
+  };
+}
 
 type FeedSnapshot = Pick<NotificationFeed, "notifications" | "unreadCount">;
 
@@ -46,7 +74,9 @@ export function feedSnapshot(
  * user (each time the layout reloads) re-authenticates without reopening the
  * feed. Settings that aren't a Knock session give an empty feed.
  */
-export function useKnockFeed(settings: Record<string, string>): NotificationFeed {
+export function useKnockFeed(
+  settings: Record<string, string>
+): NotificationFeed {
   const parsed = knockSettings.safeParse(settings);
   const session = parsed.success ? parsed.data : null;
   const publicApiKey = session?.publicApiKey;
@@ -63,9 +93,7 @@ export function useKnockFeed(settings: Record<string, string>): NotificationFeed
     if (!publicApiKey || !feedChannelId || !userId) return;
 
     const knock = new Knock(publicApiKey);
-    knock.authenticate({ id: userId }, tokenRef.current, {
-      identificationStrategy: "skip",
-    });
+    authenticate(knock, userId, tokenRef.current);
     const feed = knock.feeds.initialize(feedChannelId, {
       page_size: PAGE_SIZE,
     });
@@ -76,9 +104,7 @@ export function useKnockFeed(settings: Record<string, string>): NotificationFeed
       setSnapshot(feedSnapshot(state))
     );
     feed.listenForUpdates();
-    feed.fetch().catch((error: unknown) => {
-      console.error("[notifications] could not load the feed", error);
-    });
+    feed.fetch().catch(logFailure("load the feed"));
 
     return () => {
       unsubscribe();
@@ -94,24 +120,18 @@ export function useKnockFeed(settings: Record<string, string>): NotificationFeed
     tokenRef.current = userToken;
     const knock = knockRef.current;
     if (!knock || !userId || knock.userToken === userToken) return;
-    knock.authenticate({ id: userId }, userToken, {
-      identificationStrategy: "skip",
-    });
+    authenticate(knock, userId, userToken);
   }, [userId, userToken]);
 
   const markRead = useCallback((id: string) => {
     const feed = feedRef.current;
     const item = feed?.getState().items.find((each) => each.id === id);
     if (!feed || !item || item.read_at !== null) return;
-    feed.markAsRead(item).catch((error: unknown) => {
-      console.error("[notifications] could not mark Read", error);
-    });
+    feed.markAsRead(item).catch(logFailure("mark Read"));
   }, []);
 
   const markAllRead = useCallback(() => {
-    feedRef.current?.markAllAsRead().catch((error: unknown) => {
-      console.error("[notifications] could not mark all Read", error);
-    });
+    feedRef.current?.markAllAsRead().catch(logFailure("mark all Read"));
   }, []);
 
   return useMemo(

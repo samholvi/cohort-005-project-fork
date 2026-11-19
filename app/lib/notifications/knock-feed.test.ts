@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { feedSnapshot } from "./knock-feed";
+import { feedSnapshot, knockFeedKey } from "./knock-feed";
 
 type FeedItem = Parameters<typeof feedSnapshot>[0]["items"][number];
 
@@ -68,7 +68,12 @@ describe("feedSnapshot", () => {
       items: [
         feedItem({
           blocks: [
-            { type: "markdown", name: "body", content: "x", rendered: "<b>x</b>" },
+            {
+              type: "markdown",
+              name: "body",
+              content: "x",
+              rendered: "<b>x</b>",
+            },
           ],
           seen_at: "2026-10-06T12:01:00.000Z",
         }),
@@ -104,5 +109,26 @@ describe("feedSnapshot", () => {
     });
 
     expect(snapshot.unreadCount).toBe(3);
+  });
+});
+
+describe("knockFeedKey", () => {
+  const settings = {
+    publicApiKey: "pk",
+    feedChannelId: "channel",
+    userId: "cadence-7",
+    userToken: "token-a",
+  };
+
+  it("stays the same when only the token is refreshed", () => {
+    expect(knockFeedKey({ ...settings, userToken: "token-b" })).toBe(
+      knockFeedKey(settings)
+    );
+  });
+
+  it("changes when the user changes, so their feed opens fresh", () => {
+    expect(knockFeedKey({ ...settings, userId: "cadence-8" })).not.toBe(
+      knockFeedKey(settings)
+    );
   });
 });

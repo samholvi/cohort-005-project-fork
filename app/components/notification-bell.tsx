@@ -3,11 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { describeNotification } from "~/lib/notifications/descriptions";
 import { useNotificationFeed } from "~/lib/notifications/feed";
-import {
-  isNotificationKind,
-  NOTIFICATION_KIND_LABELS,
-  type Notification,
-} from "~/lib/notifications/kinds";
+import { kindLabel, type Notification } from "~/lib/notifications/kinds";
 import { timeAgo } from "~/lib/notifications/time-ago";
 import { cn } from "~/lib/utils";
 
@@ -59,7 +55,7 @@ export function NotificationBell() {
               disabled={unreadCount === 0}
               className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground disabled:opacity-40"
             >
-              <CheckCheck className="size-3.5" /> Mark all as read
+              <CheckCheck className="size-3.5" /> Mark all as Read
             </button>
           </div>
           <div className="max-h-[28rem] divide-y overflow-y-auto">
@@ -94,9 +90,6 @@ function NotificationRow({
 }) {
   const { text, href } = describeNotification(notification);
   const unread = !notification.read;
-  const kindLabel = isNotificationKind(notification.kind)
-    ? NOTIFICATION_KIND_LABELS[notification.kind]
-    : "Notification";
 
   return (
     <div
@@ -118,7 +111,8 @@ function NotificationRow({
       >
         <div className={cn(unread && "text-foreground")}>{text}</div>
         <div className="mt-0.5 text-xs text-muted-foreground">
-          {kindLabel} · {timeAgo(notification.createdAt, now)}
+          {kindLabel(notification.kind)} ·{" "}
+          {timeAgo(notification.createdAt, now)}
         </div>
       </button>
     </div>

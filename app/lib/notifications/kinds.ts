@@ -46,6 +46,13 @@ export function isNotificationKind(value: string): value is NotificationKind {
   return Object.hasOwn(NOTIFICATION_KIND_LABELS, value);
 }
 
+/** The human name of a kind, or "Notification" for one this build doesn't know. */
+export function kindLabel(kind: string): string {
+  return isNotificationKind(kind)
+    ? NOTIFICATION_KIND_LABELS[kind]
+    : "Notification";
+}
+
 /**
  * A Notification as Cadence sees it, whatever provider stored it. `kind` is a
  * plain string and `data` is unknown because both come back from outside

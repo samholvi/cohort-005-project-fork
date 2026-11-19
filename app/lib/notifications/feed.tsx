@@ -1,6 +1,6 @@
 import { createContext, useContext, type ReactNode } from "react";
 import type { Notification } from "./kinds";
-import { useKnockFeed } from "./knock-feed";
+import { KNOCK_PROVIDER, knockFeedKey, useKnockFeed } from "./knock-feed";
 import type { FeedSession } from "./provider.server";
 
 // ─── Notification feed (browser) ───
@@ -36,9 +36,12 @@ export function NotificationFeedProvider({
   session: FeedSession | null;
   children: ReactNode;
 }) {
-  if (session?.provider === "knock") {
+  if (session?.provider === KNOCK_PROVIDER) {
     return (
-      <KnockFeed key={session.settings.userId} settings={session.settings}>
+      <KnockFeed
+        key={knockFeedKey(session.settings)}
+        settings={session.settings}
+      >
         {children}
       </KnockFeed>
     );
