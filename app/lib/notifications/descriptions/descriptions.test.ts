@@ -52,7 +52,10 @@ describe("describeNotification", () => {
         notification("comment-reply", { actorName: "Jo Park" })
       );
 
-      expect(result).toEqual({ text: "You have a new Notification", href: null });
+      expect(result).toEqual({
+        text: "You have a new Notification",
+        href: null,
+      });
     });
   });
 

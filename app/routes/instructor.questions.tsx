@@ -208,10 +208,14 @@ export async function action({ request }: Route.ActionArgs) {
   // instructor, or an admin.
   const access = await requireStaff(request, course.courseId);
 
-  let reply;
+  if (!access.userId) {
+    throw data("Select a user from the DevUI panel.", { status: 401 });
+  }
+
+  let reply: ReturnType<typeof createComment>;
   try {
     reply = createComment(
-      access.userId!,
+      access.userId,
       question.lessonId,
       question.id,
       parsed.data.body
