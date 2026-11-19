@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useFetcher, useBlocker } from "react-router";
 import { toast } from "sonner";
 import type { Route } from "./+types/instructor.$courseId.lessons.$lessonId";
 import { getCurrentUserId } from "~/lib/session";
 import {
+  CourseStatus,
   UserRole,
   users,
   courses,
@@ -21,27 +22,36 @@ import { MonacoMarkdownEditor } from "~/components/monaco-markdown-editor";
 import {
   AlertTriangle,
   ArrowLeft,
+  Check,
   ClipboardList,
   ExternalLink,
   Github,
+  Megaphone,
   Save,
 } from "lucide-react";
 import { data, isRouteErrorResponse } from "react-router";
 import { z } from "zod";
 import { parseFormData, parseParams } from "~/lib/validation";
+import { notifyEnrolledStudents } from "~/lib/notifications/new-lesson.server";
+import { newLessonText } from "~/lib/notifications/descriptions/new-lesson";
 
 const instructorLessonParamsSchema = z.object({
   courseId: z.coerce.number().int(),
   lessonId: z.coerce.number().int(),
 });
 
-const updateLessonSchema = z.object({
-  intent: z.literal("update-lesson"),
-  content: z.string().optional(),
-  videoUrl: z.string().trim().optional(),
-  durationMinutes: z.string().optional(),
-  githubRepoUrl: z.string().trim().optional(),
-});
+const lessonActionSchema = z.discriminatedUnion("intent", [
+  z.object({
+    intent: z.literal("update-lesson"),
+    content: z.string().optional(),
+    videoUrl: z.string().trim().optional(),
+    durationMinutes: z.string().optional(),
+    githubRepoUrl: z.string().trim().optional(),
+  }),
+  z.object({ intent: z.literal("notify-students") }),
+]);
+
+const NOTIFY_FAILED = "Couldn't notify Students, try again";
 
 function getUserById(id: number) {
   return db.select().from(users).where(eq(users.id, id)).get();
@@ -195,7 +205,7 @@ export async function action({ params, request }: Route.ActionArgs) {
   }
 
   const formData = await request.formData();
-  const parsed = parseFormData(formData, updateLessonSchema);
+  const parsed = parseFormData(formData, lessonActionSchema);
 
   if (!parsed.success) {
     return data(
@@ -232,6 +242,25 @@ export async function action({ params, request }: Route.ActionArgs) {
       githubRepoUrl || null
     );
     return { success: true };
+  }
+
+  if (parsed.data.intent === "notify-students") {
+    const result = await notifyEnrolledStudents(
+      db,
+      lessonId,
+      currentUserId,
+      new Date()
+    );
+    if (result.ok) return { notified: true };
+    if (result.reason === "course-not-published") {
+      throw data("Publish the course to notify Students.", { status: 409 });
+    }
+    if (result.reason === "already-notified") {
+      throw data("Students were already notified about this lesson.", {
+        status: 409,
+      });
+    }
+    return data({ notifyError: NOTIFY_FAILED }, { status: 502 });
   }
 
   throw data("Invalid action.", { status: 400 });
@@ -346,6 +375,12 @@ export default function InstructorLessonEditor({
               View Lesson
             </Button>
           </Link>
+          <NotifyStudentsButton
+            courseTitle={course.title}
+            lessonTitle={lesson.title}
+            isPublished={course.status === CourseStatus.Published}
+            studentsNotifiedAt={lesson.studentsNotifiedAt}
+          />
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
           Module: {mod.title}
@@ -474,6 +509,132 @@ export default function InstructorLessonEditor({
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function NotifyStudentsButton({
+  courseTitle,
+  lessonTitle,
+  isPublished,
+  studentsNotifiedAt,
+}: {
+  courseTitle: string;
+  lessonTitle: string;
+  isPublished: boolean;
+  studentsNotifiedAt: string | null;
+}) {
+  const fetcher = useFetcher<typeof action>();
+  const [confirming, setConfirming] = useState(false);
+  const wasSubmitting = useRef(false);
+  const sending = fetcher.state !== "idle";
+  const notifyError =
+    !sending && fetcher.data && "notifyError" in fetcher.data
+      ? fetcher.data.notifyError
+      : null;
+
+  useEffect(() => {
+    if (sending) {
+      wasSubmitting.current = true;
+      return;
+    }
+    if (!wasSubmitting.current) return;
+    wasSubmitting.current = false;
+    setConfirming(false);
+    if (fetcher.data && "notified" in fetcher.data) {
+      toast.success("Enrolled Students notified.");
+    }
+  }, [sending, fetcher.data]);
+
+  if (studentsNotifiedAt) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-sm text-muted-foreground">
+        <Check className="size-4" />
+        Students notified on{" "}
+        {new Date(studentsNotifiedAt).toLocaleDateString("en-GB", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })}
+      </span>
+    );
+  }
+
+  if (!isPublished) {
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        disabled
+        title="Publish the course to notify Students"
+      >
+        <Megaphone className="mr-1.5 size-4" />
+        Notify enrolled Students
+      </Button>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setConfirming((open) => !open)}
+        disabled={sending}
+      >
+        <Megaphone className="mr-1.5 size-4" />
+        Notify enrolled Students
+      </Button>
+      {notifyError && !confirming && (
+        <p
+          role="alert"
+          className="absolute top-full left-0 mt-1 w-max text-sm text-destructive"
+        >
+          {notifyError}
+        </p>
+      )}
+      {confirming && (
+        <div
+          role="dialog"
+          aria-label="Notify enrolled Students?"
+          className="absolute top-full left-0 z-50 mt-2 w-80 rounded-lg border bg-popover p-4 text-sm shadow-xl"
+        >
+          <p className="font-semibold">Notify enrolled Students?</p>
+          <p className="mt-2 text-muted-foreground">
+            Every Student with an Enrollment on{" "}
+            <strong className="text-foreground">{courseTitle}</strong> gets: "
+            {newLessonText(courseTitle, lessonTitle)}". You can only do this
+            once for this lesson.
+          </p>
+          {notifyError && (
+            <p role="alert" className="mt-2 text-destructive">
+              {notifyError}
+            </p>
+          )}
+          <div className="mt-4 flex justify-end gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setConfirming(false)}
+              disabled={sending}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              disabled={sending}
+              onClick={() =>
+                fetcher.submit(
+                  { intent: "notify-students" },
+                  { method: "post" }
+                )
+              }
+            >
+              {sending ? "Notifying..." : "Notify"}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
