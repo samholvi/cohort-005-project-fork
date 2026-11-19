@@ -92,11 +92,11 @@ describe("notifyEnrolledStudents", () => {
     expect(studentsNotifiedAt()).toBe(NOW.toISOString());
   });
 
-  it("never sends to the course's Instructor, even when enrolled and an Admin presses the button", async () => {
+  it("never sends to the course's Instructor, even when enrolled and a Platform Admin presses the button", async () => {
     const admin = db
       .insert(schema.users)
       .values({
-        name: "Admin",
+        name: "Platform Admin",
         email: "admin@example.com",
         role: schema.UserRole.Admin,
       })
@@ -155,6 +155,41 @@ describe("notifyEnrolledStudents", () => {
     );
 
     expect(result).toEqual({ ok: false, reason: "already-notified" });
+    expect(provider.sent).toHaveLength(1);
+    expect(studentsNotifiedAt()).toBe(NOW.toISOString());
+  });
+
+  it("sends once when two presses overlap: the second is refused while the first is in flight", async () => {
+    enroll(base.user.id);
+    const provider = fakeProvider();
+    let accept!: () => void;
+    const accepted = new Promise<void>((resolve) => (accept = resolve));
+    const slowProvider: typeof provider = {
+      ...provider,
+      async send(...args) {
+        await accepted;
+        return provider.send(...args);
+      },
+    };
+
+    const first = notifyEnrolledStudents(
+      db,
+      lesson.id,
+      base.instructor.id,
+      NOW,
+      slowProvider
+    );
+    const second = notifyEnrolledStudents(
+      db,
+      lesson.id,
+      base.instructor.id,
+      NOW,
+      slowProvider
+    );
+    accept();
+
+    expect(await first).toEqual({ ok: true, notifiedAt: NOW.toISOString() });
+    expect(await second).toEqual({ ok: false, reason: "already-notified" });
     expect(provider.sent).toHaveLength(1);
     expect(studentsNotifiedAt()).toBe(NOW.toISOString());
   });

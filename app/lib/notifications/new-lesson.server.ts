@@ -20,7 +20,12 @@ export type NotifyEnrolledStudentsResult =
 /**
  * New lesson: announces the lesson to every Student with an Enrollment on its
  * course. Unlike other kinds this is awaited, retries included, and the lesson
- * is marked notified only once the provider accepts.
+ * ends up marked notified only once the provider accepts.
+ *
+ * Once-only is atomic: the lesson is claimed (marked) with a conditional
+ * update before the send, so an overlapping press is refused as already
+ * notified. If the provider gives up, the claim is released and the lesson is
+ * unmarked again.
  */
 export async function notifyEnrolledStudents(
   db: Db,
@@ -32,7 +37,6 @@ export async function notifyEnrolledStudents(
   const lesson = db
     .select({
       lessonTitle: schema.lessons.title,
-      studentsNotifiedAt: schema.lessons.studentsNotifiedAt,
       courseId: schema.courses.id,
       instructorId: schema.courses.instructorId,
       courseTitle: schema.courses.title,
@@ -48,7 +52,19 @@ export async function notifyEnrolledStudents(
   if (lesson.courseStatus !== schema.CourseStatus.Published) {
     return { ok: false, reason: "course-not-published" };
   }
-  if (lesson.studentsNotifiedAt !== null) {
+
+  const notifiedAt = now.toISOString();
+  const claim = db
+    .update(schema.lessons)
+    .set({ studentsNotifiedAt: notifiedAt })
+    .where(
+      and(
+        eq(schema.lessons.id, lessonId),
+        isNull(schema.lessons.studentsNotifiedAt)
+      )
+    )
+    .run();
+  if (claim.changes === 0) {
     return { ok: false, reason: "already-notified" };
   }
 
@@ -80,18 +96,17 @@ export async function notifyEnrolledStudents(
       `[notifications] gave up on ${NotificationKind.NewLesson} for lesson ${lessonId} (triggered ${now.toISOString()})`,
       error
     );
+    db.update(schema.lessons)
+      .set({ studentsNotifiedAt: null })
+      .where(
+        and(
+          eq(schema.lessons.id, lessonId),
+          eq(schema.lessons.studentsNotifiedAt, notifiedAt)
+        )
+      )
+      .run();
     return { ok: false, reason: "delivery-failed" };
   }
 
-  const notifiedAt = now.toISOString();
-  db.update(schema.lessons)
-    .set({ studentsNotifiedAt: notifiedAt })
-    .where(
-      and(
-        eq(schema.lessons.id, lessonId),
-        isNull(schema.lessons.studentsNotifiedAt)
-      )
-    )
-    .run();
   return { ok: true, notifiedAt };
 }
