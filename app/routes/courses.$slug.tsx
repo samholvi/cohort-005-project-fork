@@ -476,8 +476,8 @@ export async function action({ params, request }: Route.ActionArgs) {
     return { ok: false as const, error: "Please choose a rating from 1 to 5." };
   }
 
-  const rating = rateCourse(currentUserId, course.id, parsed.data.rating);
-  void notifyNewRating(db, rating.id, currentUserId, new Date());
+  const courseRating = rateCourse(currentUserId, course.id, parsed.data.rating);
+  void notifyNewRating(db, courseRating.id, currentUserId, new Date());
 
   return { ok: true as const, error: null };
 }

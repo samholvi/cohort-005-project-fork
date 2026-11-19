@@ -30,16 +30,16 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+function person(user: typeof schema.users.$inferSelect) {
+  return { id: user.id, name: user.name, email: user.email };
+}
+
 function instructor() {
-  return {
-    id: base.instructor.id,
-    name: "Test Instructor",
-    email: "instructor@example.com",
-  };
+  return person(base.instructor);
 }
 
 function student() {
-  return { id: base.user.id, name: "Test User", email: "test@example.com" };
+  return person(base.user);
 }
 
 function comment(userId: number, parentId: number | null) {

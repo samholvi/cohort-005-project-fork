@@ -70,7 +70,7 @@ export function notifyNewRating(
   provider: NotificationProvider = defaultProvider()
 ): Promise<void> {
   return notifyInBackground(NotificationKind.NewRating, now, async () => {
-    const rating = db
+    const courseRating = db
       .select({
         rating: schema.courseRatings.rating,
         courseTitle: schema.courses.title,
@@ -84,17 +84,17 @@ export function notifyNewRating(
       )
       .where(eq(schema.courseRatings.id, ratingId))
       .get();
-    if (!rating) return;
+    if (!courseRating) return;
 
     const actor = getPerson(db, actorId);
-    const instructor = getPerson(db, rating.instructorId);
+    const instructor = getPerson(db, courseRating.instructorId);
     if (!actor || !instructor) return;
 
     const data: NewRatingData = {
       actorName: actor.name,
-      courseTitle: rating.courseTitle,
-      courseSlug: rating.courseSlug,
-      rating: rating.rating,
+      courseTitle: courseRating.courseTitle,
+      courseSlug: courseRating.courseSlug,
+      rating: courseRating.rating,
     };
 
     await sendWithRetries(
