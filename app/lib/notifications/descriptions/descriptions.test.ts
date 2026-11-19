@@ -56,6 +56,42 @@ describe("describeNotification", () => {
     });
   });
 
+  describe("Inactive on a course", () => {
+    it("gives the progress and the lesson to pick up at, linking to it", () => {
+      const result = describeNotification(
+        notification("inactive-on-course", {
+          courseTitle: "JavaScript Basics",
+          courseSlug: "javascript-basics",
+          lessonId: 12,
+          lessonTitle: "Closures",
+          percentComplete: 80,
+        })
+      );
+
+      expect(result).toEqual({
+        text: "You're 80% through JavaScript Basics. Pick up at Closures.",
+        href: "/courses/javascript-basics/lessons/12",
+      });
+    });
+
+    it("leaves out the percentage when no lesson is complete", () => {
+      const result = describeNotification(
+        notification("inactive-on-course", {
+          courseTitle: "JavaScript Basics",
+          courseSlug: "javascript-basics",
+          lessonId: 3,
+          lessonTitle: "Welcome",
+          percentComplete: null,
+        })
+      );
+
+      expect(result).toEqual({
+        text: "Pick up JavaScript Basics at Welcome.",
+        href: "/courses/javascript-basics/lessons/3",
+      });
+    });
+  });
+
   it("gives the generic row for an unknown kind", () => {
     const result = describeNotification(
       notification("something-new", { anything: true })
