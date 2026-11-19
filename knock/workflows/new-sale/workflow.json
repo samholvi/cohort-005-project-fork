@@ -1,9 +1,6 @@
 {
   "name": "New sale",
   "description": "Cadence kind \"new-sale\". Cadence renders the text itself, so the template is a placeholder.",
-  "categories": [
-    "cadence"
-  ],
   "steps": [
     {
       "ref": "in_app_feed_1",

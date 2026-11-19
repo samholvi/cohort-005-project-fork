@@ -1,9 +1,6 @@
 {
   "name": "Reply to your comment",
   "description": "Cadence kind \"comment-reply\". Cadence renders the text itself, so the template is a placeholder.",
-  "categories": [
-    "cadence"
-  ],
   "steps": [
     {
       "ref": "in_app_feed_1",

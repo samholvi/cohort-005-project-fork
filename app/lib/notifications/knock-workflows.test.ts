@@ -40,4 +40,16 @@ describe("Knock workflows", () => {
       expect(template.action_buttons, key).toBeUndefined();
     }
   });
+
+  // Knock rejects a category that isn't already in the environment's
+  // preference category catalog, and Cadence has no Notification preferences,
+  // so workflows carry no categories and need no dashboard setup.
+  it("gives no workflow a category", () => {
+    for (const key of readdirSync(WORKFLOWS)) {
+      const workflow = JSON.parse(
+        readFileSync(join(WORKFLOWS, key, "workflow.json"), "utf8")
+      );
+      expect(workflow.categories, key).toBeUndefined();
+    }
+  });
 });

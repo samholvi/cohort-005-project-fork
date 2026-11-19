@@ -1,9 +1,6 @@
 {
   "name": "Refund approved on your course",
   "description": "Cadence kind \"refund-approved-on-your-course\". Cadence renders the text itself, so the template is a placeholder.",
-  "categories": [
-    "cadence"
-  ],
   "steps": [
     {
       "ref": "in_app_feed_1",
