@@ -18,6 +18,7 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { MonacoMarkdownEditor } from "~/components/monaco-markdown-editor";
+import { NotifyStudentsPrototypeButton } from "~/components/notifications-prototype";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -346,6 +347,13 @@ export default function InstructorLessonEditor({
               View Lesson
             </Button>
           </Link>
+          {/* PROTOTYPE: notifications */}
+          <NotifyStudentsPrototypeButton
+            lessonId={lesson.id}
+            lessonTitle={lesson.title}
+            courseTitle={course.title}
+            coursePublished={course.status === "published"}
+          />
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
           Module: {mod.title}
