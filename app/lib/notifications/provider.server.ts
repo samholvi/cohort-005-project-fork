@@ -24,7 +24,10 @@ export type NotificationData = { key?: string } & Record<string, unknown>;
  * Opaque: only the adapter that created it, and its browser counterpart,
  * read `settings`.
  */
-export type FeedSession = { provider: string; settings: Record<string, string> };
+export type FeedSession = {
+  provider: string;
+  settings: Record<string, string>;
+};
 
 export interface NotificationProvider {
   /** Deliver one Notification of `kind` to each recipient. */

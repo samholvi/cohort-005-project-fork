@@ -198,6 +198,8 @@ describe("knockConfigFromEnv", () => {
   });
 
   it("is null when a required variable is missing", () => {
-    expect(knockConfigFromEnv({ ...env, KNOCK_FEED_CHANNEL_ID: "" })).toBeNull();
+    expect(
+      knockConfigFromEnv({ ...env, KNOCK_FEED_CHANNEL_ID: "" })
+    ).toBeNull();
   });
 });
