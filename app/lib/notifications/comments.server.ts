@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import * as schema from "~/db/schema";
 import {
   getPerson,
@@ -12,7 +12,8 @@ import { defaultProvider, type NotificationProvider } from "./provider.server";
 
 /**
  * Reply to your comment: tells the parent comment's author, whatever their
- * role, that `actorId` replied. Call after the reply is saved, without
+ * role, that `actorId` replied. Sends nothing for a top-level comment or
+ * when the parent comment was deleted. Call after the reply is saved, without
  * awaiting; it never rejects.
  */
 export function notifyCommentReply(
@@ -31,7 +32,10 @@ export function notifyCommentReply(
         courseSlug: schema.courses.slug,
       })
       .from(schema.comments)
-      .innerJoin(schema.lessons, eq(schema.comments.lessonId, schema.lessons.id))
+      .innerJoin(
+        schema.lessons,
+        eq(schema.comments.lessonId, schema.lessons.id)
+      )
       .innerJoin(schema.modules, eq(schema.lessons.moduleId, schema.modules.id))
       .innerJoin(schema.courses, eq(schema.modules.courseId, schema.courses.id))
       .where(eq(schema.comments.id, replyId))
@@ -41,7 +45,12 @@ export function notifyCommentReply(
     const parent = db
       .select({ userId: schema.comments.userId })
       .from(schema.comments)
-      .where(eq(schema.comments.id, reply.parentId))
+      .where(
+        and(
+          eq(schema.comments.id, reply.parentId),
+          isNull(schema.comments.deletedAt)
+        )
+      )
       .get();
     const actor = getPerson(db, actorId);
     if (!parent || !actor) return;
