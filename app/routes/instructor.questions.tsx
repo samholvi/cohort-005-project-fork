@@ -15,6 +15,7 @@ import { cn, daysSince, formatRelativeTime } from "~/lib/utils";
 import { MIN_COMMENT_LENGTH, MAX_COMMENT_LENGTH } from "~/lib/comments";
 import { parseFormData } from "~/lib/validation";
 import { db } from "~/db";
+import { notifyCommentReply } from "~/lib/notifications/comments.server";
 import {
   comments,
   courses,
@@ -207,8 +208,9 @@ export async function action({ request }: Route.ActionArgs) {
   // instructor, or an admin.
   const access = await requireStaff(request, course.courseId);
 
+  let reply;
   try {
-    createComment(
+    reply = createComment(
       access.userId!,
       question.lessonId,
       question.id,
@@ -220,6 +222,8 @@ export async function action({ request }: Route.ActionArgs) {
     }
     throw error;
   }
+
+  void notifyCommentReply(db, reply.id, reply.userId, new Date());
 
   return { ok: true };
 }
