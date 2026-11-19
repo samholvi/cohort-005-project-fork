@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { Route } from "./+types/admin.courses";
 import { getCurrentUserId } from "~/lib/session";
 import { parseFormData } from "~/lib/validation";
+import { notifyCourseStatusChange } from "~/lib/notifications/course-status.server";
 import {
   UserRole,
   CourseStatus,
@@ -139,7 +140,22 @@ export async function action({ request }: Route.ActionArgs) {
   const { intent } = parsed.data;
 
   if (intent === "update-status") {
+    const before = db
+      .select({ status: courses.status })
+      .from(courses)
+      .where(eq(courses.id, parsed.data.courseId))
+      .get();
+    if (!before) {
+      throw data("Course not found.", { status: 404 });
+    }
     updateCourseStatus(parsed.data.courseId, parsed.data.status);
+    void notifyCourseStatusChange(
+      db,
+      parsed.data.courseId,
+      before.status,
+      currentUserId,
+      new Date()
+    );
     return { success: true };
   }
 

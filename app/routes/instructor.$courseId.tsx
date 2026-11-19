@@ -58,6 +58,7 @@ import {
 import { data, isRouteErrorResponse } from "react-router";
 import { z } from "zod";
 import { parseFormData, parseParams } from "~/lib/validation";
+import { notifyCourseStatusChange } from "~/lib/notifications/course-status.server";
 
 function getUserById(id: number) {
   return db.select().from(users).where(eq(users.id, id)).get();
@@ -694,6 +695,13 @@ export async function action({ params, request }: Route.ActionArgs) {
 
   if (intent === "update-status") {
     updateCourseStatus(courseId, parsed.data.status);
+    void notifyCourseStatusChange(
+      db,
+      courseId,
+      course.status,
+      currentUserId,
+      new Date()
+    );
     return { success: true, field: "status" };
   }
 
