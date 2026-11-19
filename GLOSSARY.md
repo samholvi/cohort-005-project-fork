@@ -31,6 +31,14 @@ _Avoid_: Place on a course, Access
 **Lapsed**:
 A Student who has lost their Enrollment on a course but still has progress on it.
 
+**Finished**:
+A Student has Finished a course when every lesson in it is marked complete.
+_Avoid_: Completed (on its own), Done
+
+**Inactive**:
+A Student with an Enrollment on a course they haven't Finished, who has had no Watched seconds on it for 7 days. Inactive is per course: watching another course doesn't count. Unlike a Lapsed Student, an Inactive one still has their Enrollment.
+_Avoid_: Idle, Dormant, Churned
+
 **Watched**:
 Seconds of video a Student has actually played in a course: the furthest point reached in each lesson, added up. Not lessons opened.
 _Avoid_: Viewed, Progress
@@ -92,3 +100,17 @@ A Refund where the money couldn't be sent. The Refund Request stays approved, be
 **Watch Limit**:
 The amount of Watched time on a course past which a Student can no longer get a Refund, because they've had the course.
 _Avoid_: Watch cap, Viewing threshold
+
+### Notifications
+
+**Notification**:
+A message in a person's in-app feed telling them about something they didn't do themselves: another person's action, or a course where they've become Inactive. It is either Read or Unread.
+_Avoid_: Alert, Message (on its own)
+
+**Unread**:
+A Notification its recipient hasn't opened yet. Seeing a Notification in the list doesn't make it Read.
+_Avoid_: New, Unseen
+
+**Read**:
+A Notification its recipient has opened, or marked as Read along with all the others. A "Refund Request to decide" Notification becomes Read for every Platform Admin as soon as any one of them decides the Refund Request.
+_Avoid_: Seen, Dismissed, Acknowledged
