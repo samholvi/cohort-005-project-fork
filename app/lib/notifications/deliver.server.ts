@@ -13,8 +13,10 @@ import type {
 // failed delivery is retried a couple of times with backoff, then logged and
 // dropped: it must never fail or slow the action that caused it.
 //
-//   notifyInBackground   wraps a whole notify function; never rejects.
-//                        Routes call notify functions without awaiting.
+//   notifyInBackground   wraps a whole notify function; never rejects. The
+//                        work starts on a later turn of the event loop, so
+//                        none of it runs inside the request. Routes call
+//                        notify functions without awaiting.
 //   sendWithRetries      applies the standing rule and retries; rejects after
 //                        the last attempt. Use it directly when the caller
 //                        must know the outcome (Notify enrolled Students).
@@ -30,6 +32,7 @@ export async function notifyInBackground(
   work: () => Promise<void>
 ): Promise<void> {
   try {
+    await new Promise((resolve) => setImmediate(resolve));
     await work();
   } catch (error) {
     console.error(

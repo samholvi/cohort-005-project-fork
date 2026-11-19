@@ -907,9 +907,7 @@ export async function action({ params, request }: Route.ActionArgs) {
           parsed.data.parentId ?? null,
           parsed.data.body
         );
-        if (created.parentId !== null) {
-          void notifyCommentReply(db, created.id, currentUserId, new Date());
-        }
+        void notifyCommentReply(db, created.id, currentUserId, new Date());
         return { ok: true };
       }
 
