@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
 
-// Only the Knock adapters may import Knock packages (ADR 0013). An adapter is
+// Only the Knock adapters may import Knock packages (ADR 0014). An adapter is
 // a non-test module in app/lib/notifications/ whose name starts with
 // `knock-`: the server adapter now, its browser counterpart later. There's no
 // ESLint in this repo, so this test is the restricted-imports rule.

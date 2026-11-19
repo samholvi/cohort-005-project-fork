@@ -1,4 +1,5 @@
 import { Knock, signUserToken } from "@knocklabs/node";
+import type { NotificationKind } from "./kinds";
 import type {
   NotificationPerson,
   NotificationProvider,
@@ -21,12 +22,35 @@ export type KnockConfig = {
   recipientPrefix: string;
 };
 
+/**
+ * The KnockConfig the `KNOCK_*` variables describe, or null when any of the
+ * four required ones is missing. The recipient prefix may be empty.
+ */
+export function knockConfigFromEnv(
+  env: Record<string, string | undefined>
+): KnockConfig | null {
+  const secretApiKey = env.KNOCK_SECRET_API_KEY;
+  const publicApiKey = env.KNOCK_PUBLIC_API_KEY;
+  const signingKey = env.KNOCK_SIGNING_KEY;
+  const feedChannelId = env.KNOCK_FEED_CHANNEL_ID;
+  if (!secretApiKey || !publicApiKey || !signingKey || !feedChannelId) {
+    return null;
+  }
+  return {
+    secretApiKey,
+    publicApiKey,
+    signingKey,
+    feedChannelId,
+    recipientPrefix: env.KNOCK_RECIPIENT_PREFIX ?? "",
+  };
+}
+
 type KnockRecipient = { id: string; name: string; email: string };
 
 /** The few Knock calls the adapter makes. Tests replace it with a recorder. */
 export type KnockApi = {
   trigger(
-    workflowKey: string,
+    workflowKey: NotificationKind,
     params: {
       recipients: KnockRecipient[];
       actor?: KnockRecipient;
@@ -35,7 +59,7 @@ export type KnockApi = {
   ): Promise<void>;
   listUnreadMessageIds(
     recipientId: string,
-    query: { workflowKey: string; feedChannelId: string; key: string }
+    query: { workflowKey: NotificationKind; feedChannelId: string; key: string }
   ): Promise<string[]>;
   markMessagesRead(messageIds: string[]): Promise<void>;
 };
@@ -73,12 +97,12 @@ export function knockProvider(
         feedChannelId: config.feedChannelId,
         key,
       };
-      const messageIds: string[] = [];
-      for (const userId of recipientIds) {
-        messageIds.push(
-          ...(await api.listUnreadMessageIds(recipientId(userId), query))
-        );
-      }
+      const perRecipient = await Promise.all(
+        recipientIds.map((userId) =>
+          api.listUnreadMessageIds(recipientId(userId), query)
+        )
+      );
+      const messageIds = perRecipient.flat();
       if (messageIds.length > 0) await api.markMessagesRead(messageIds);
     },
 

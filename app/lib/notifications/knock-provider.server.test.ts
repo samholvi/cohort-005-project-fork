@@ -1,6 +1,7 @@
 import { generateKeyPairSync, verify } from "node:crypto";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
+  knockConfigFromEnv,
   knockProvider,
   type KnockApi,
   type KnockConfig,
@@ -175,5 +176,28 @@ describe("knockProvider", () => {
         recording.calls.filter((call) => call.method === "markMessagesRead")
       ).toEqual([]);
     });
+  });
+});
+
+describe("knockConfigFromEnv", () => {
+  const env = {
+    KNOCK_SECRET_API_KEY: "sk",
+    KNOCK_PUBLIC_API_KEY: "pk",
+    KNOCK_SIGNING_KEY: "key",
+    KNOCK_FEED_CHANNEL_ID: "feed",
+  };
+
+  it("uses an empty recipient prefix when none is set", () => {
+    expect(knockConfigFromEnv(env)).toEqual({
+      secretApiKey: "sk",
+      publicApiKey: "pk",
+      signingKey: "key",
+      feedChannelId: "feed",
+      recipientPrefix: "",
+    });
+  });
+
+  it("is null when a required variable is missing", () => {
+    expect(knockConfigFromEnv({ ...env, KNOCK_FEED_CHANNEL_ID: "" })).toBeNull();
   });
 });

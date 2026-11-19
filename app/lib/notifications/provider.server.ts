@@ -1,5 +1,5 @@
 import type { NotificationKind } from "./kinds";
-import { knockProvider } from "./knock-provider.server";
+import { knockConfigFromEnv, knockProvider } from "./knock-provider.server";
 import { localFolderProvider } from "./local-folder-provider.server";
 
 // ─── Notification provider ───
@@ -56,20 +56,8 @@ type Env = Record<string, string | undefined>;
  * call time, like the mailer.
  */
 export function defaultProvider(env: Env = loadEnv()): NotificationProvider {
-  const secretApiKey = env.KNOCK_SECRET_API_KEY;
-  const publicApiKey = env.KNOCK_PUBLIC_API_KEY;
-  const signingKey = env.KNOCK_SIGNING_KEY;
-  const feedChannelId = env.KNOCK_FEED_CHANNEL_ID;
-  if (!secretApiKey || !publicApiKey || !signingKey || !feedChannelId) {
-    return localFolderProvider(LOCAL_FOLDER);
-  }
-  return knockProvider({
-    secretApiKey,
-    publicApiKey,
-    signingKey,
-    feedChannelId,
-    recipientPrefix: env.KNOCK_RECIPIENT_PREFIX ?? "",
-  });
+  const knock = knockConfigFromEnv(env);
+  return knock ? knockProvider(knock) : localFolderProvider(LOCAL_FOLDER);
 }
 
 let envLoaded = false;
