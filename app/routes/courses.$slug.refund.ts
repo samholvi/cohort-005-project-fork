@@ -8,6 +8,7 @@ import { eq } from "drizzle-orm";
 import { parseFormData, parseParams } from "~/lib/validation";
 import { raiseRefundRequest } from "~/lib/refunds.server";
 import { sendEmail } from "~/lib/mailer.server";
+import { notifyRefundRequestRaised } from "~/lib/notifications/refunds.server";
 
 const refundParamsSchema = z.object({
   slug: z.string().min(1),
@@ -72,6 +73,12 @@ export async function action({ params, request }: Route.ActionArgs) {
     throw data(result.error, { status: result.status });
   }
 
+  void notifyRefundRequestRaised(
+    db,
+    result.refundRequestId,
+    currentUserId,
+    new Date()
+  );
   await sendEmail(result.email);
 
   return redirect(result.kind === "team_licence" ? "/team" : "/settings");

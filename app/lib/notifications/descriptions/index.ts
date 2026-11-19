@@ -6,14 +6,18 @@
 import { isNotificationKind, type Notification } from "../kinds";
 import { commentDescribers } from "./comments";
 import { courseStatusDescribers } from "./course-status";
-import type { KindDescribers, NotificationDescription } from "./define";
+import type {
+  KindDescribers,
+  NotificationDescription,
+  NotificationLookups,
+} from "./define";
 import { engagementDescribers } from "./engagement";
 import { inactivityDescribers } from "./inactivity";
 import { newLessonDescribers } from "./new-lesson";
 import { refundDescribers } from "./refunds";
 import { salesDescribers } from "./sales";
 
-export type { NotificationDescription } from "./define";
+export type { NotificationDescription, NotificationLookups } from "./define";
 
 const describers: KindDescribers = {
   ...commentDescribers,
@@ -31,7 +35,8 @@ const GENERIC: NotificationDescription = {
 };
 
 export function describeNotification(
-  notification: Notification
+  notification: Notification,
+  lookups: NotificationLookups = {}
 ): NotificationDescription {
   const describer = isNotificationKind(notification.kind)
     ? describers[notification.kind]
@@ -41,5 +46,5 @@ export function describeNotification(
   const parsed = describer.data.safeParse(notification.data);
   if (!parsed.success) return GENERIC;
 
-  return describer.describe(parsed.data);
+  return describer.describe(parsed.data, lookups);
 }

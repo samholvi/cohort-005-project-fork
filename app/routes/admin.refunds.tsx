@@ -22,6 +22,7 @@ import {
 } from "~/lib/refunds.server";
 import { RULE_BREAK_LABELS } from "~/lib/refund-rules";
 import { sendEmail } from "~/lib/mailer.server";
+import { notifyRefundRequestDecided } from "~/lib/notifications/refunds.server";
 
 const refundFilterSchema = z
   .nativeEnum(RefundStatus)
@@ -127,6 +128,12 @@ export async function action({ request }: Route.ActionArgs) {
     return data({ error: result.error }, { status: result.status });
   }
 
+  void notifyRefundRequestDecided(
+    db,
+    refundRequestId,
+    platformAdmin.id,
+    new Date()
+  );
   await sendEmail(result.email);
 
   return {
@@ -288,7 +295,7 @@ function RefundRequestCard({
   }
 
   return (
-    <Card>
+    <Card id={`refund-request-${refundRequest.id}`} className="scroll-mt-4">
       <CardContent className="space-y-4 p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
