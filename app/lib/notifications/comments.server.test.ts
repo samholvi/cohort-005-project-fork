@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTestDb, seedBaseData } from "~/test/setup";
 import * as schema from "~/db/schema";
@@ -117,6 +118,20 @@ describe("notifyCommentReply", () => {
     expect(provider.attempts).toBe(3);
     expect(provider.sent).toEqual([]);
     expect(log).toHaveBeenCalledOnce();
+  });
+
+  it("sends nothing when the parent comment was deleted", async () => {
+    const question = comment(base.user.id, null);
+    db.update(schema.comments)
+      .set({ deletedAt: NOW.toISOString() })
+      .where(eq(schema.comments.id, question.id))
+      .run();
+    const reply = comment(base.instructor.id, question.id);
+    const provider = fakeProvider();
+
+    await notifyCommentReply(db, reply.id, base.instructor.id, NOW, provider);
+
+    expect(provider.sent).toEqual([]);
   });
 
   it("delivers when the provider recovers on a retry", async () => {
