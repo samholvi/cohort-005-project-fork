@@ -19,7 +19,7 @@
     "db:seed": "tsx scripts/seed.ts",
     "db:migrate": "drizzle-kit migrate",
     "knock:push": "npx -y @knocklabs/cli@1.6.3 workflow push --all --workflows-dir=knock/workflows --environment=development --commit -m \"Sync Cadence workflows\"",
-    "loc":"git ls-files | grep -vE '(lock|.db|_snapshot.json)' | xargs wc -l"
+    "loc": "git ls-files | grep -vE '(lock|.db|_snapshot.json)' | xargs wc -l"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
