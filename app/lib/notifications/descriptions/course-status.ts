@@ -19,13 +19,18 @@ export const courseStatusChangedData = z.object({
 
 export type CourseStatusChangedData = z.infer<typeof courseStatusChangedData>;
 
+const statusVerb: Record<CourseStatusChangedData["status"], string> = {
+  published: "published",
+  archived: "archived",
+};
+
 export const courseStatusDescribers: KindDescribers = {
   "course-published": defineKind(coursePublishedData, (data) => ({
     text: `${data.actorName} published ${data.courseTitle}`,
     href: `/courses/${data.courseSlug}`,
   })),
   "course-status-changed": defineKind(courseStatusChangedData, (data) => ({
-    text: `A Platform Admin ${data.status} ${data.courseTitle}`,
+    text: `A Platform Admin ${statusVerb[data.status]} ${data.courseTitle}`,
     href: `/instructor/${data.courseId}`,
   })),
 };

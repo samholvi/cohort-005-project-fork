@@ -156,7 +156,7 @@ describe("notifyCourseStatusChange", () => {
       ]);
     });
 
-    it("tells the Instructor a Platform Admin archived their course, and no admin", async () => {
+    it("tells the Instructor a Platform Admin archived their course, and no Platform Admin", async () => {
       setStatus(CourseStatus.Archived);
       const provider = fakeProvider();
 

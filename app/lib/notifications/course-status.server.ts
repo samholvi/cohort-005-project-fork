@@ -2,7 +2,6 @@ import { eq } from "drizzle-orm";
 import * as schema from "~/db/schema";
 import { CourseStatus, UserRole } from "~/db/schema";
 import {
-  getPeople,
   getPerson,
   notifyInBackground,
   sendWithRetries,
@@ -13,7 +12,11 @@ import type {
   CourseStatusChangedData,
 } from "./descriptions/course-status";
 import { NotificationKind } from "./kinds";
-import { defaultProvider, type NotificationProvider } from "./provider.server";
+import {
+  defaultProvider,
+  type NotificationPerson,
+  type NotificationProvider,
+} from "./provider.server";
 
 /**
  * Course published / Course status changed. Call after a course's status was
@@ -89,12 +92,14 @@ export function notifyCourseStatusChange(
   });
 }
 
-function getPlatformAdmins(db: Db) {
-  const ids = db
-    .select({ id: schema.users.id })
+function getPlatformAdmins(db: Db): NotificationPerson[] {
+  return db
+    .select({
+      id: schema.users.id,
+      name: schema.users.name,
+      email: schema.users.email,
+    })
     .from(schema.users)
     .where(eq(schema.users.role, UserRole.Admin))
-    .all()
-    .map((user) => user.id);
-  return getPeople(db, ids);
+    .all();
 }
