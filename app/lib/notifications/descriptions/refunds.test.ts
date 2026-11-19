@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { RefundStatus } from "~/db/schema";
 import { describeNotification } from ".";
 import type { Notification } from "../kinds";
 
@@ -30,7 +31,7 @@ describe("Refund Request to decide", () => {
   it("shows who declined it, and opens the declined tab", () => {
     const result = describeNotification(toDecide, {
       refundDecisions: {
-        "7": { status: "declined", decidedByName: "Dana Lee" },
+        "7": { status: RefundStatus.Declined, decidedByName: "Dana Lee" },
       },
     });
 
@@ -44,7 +45,7 @@ describe("Refund Request to decide", () => {
   it("shows who approved it, and opens the approved tab", () => {
     const result = describeNotification(toDecide, {
       refundDecisions: {
-        "7": { status: "approved", decidedByName: "Dana Lee" },
+        "7": { status: RefundStatus.Approved, decidedByName: "Dana Lee" },
       },
     });
 
@@ -65,7 +66,7 @@ describe("Refund Request to decide", () => {
   it("ignores decisions about other Refund Requests", () => {
     const result = describeNotification(toDecide, {
       refundDecisions: {
-        "8": { status: "approved", decidedByName: "Dana Lee" },
+        "8": { status: RefundStatus.Approved, decidedByName: "Dana Lee" },
       },
     });
 
@@ -179,7 +180,7 @@ describe("Refund approved on your course", () => {
     );
 
     expect(result).toEqual({
-      text: "A refund of Intro to Rust for Alex Kim was approved",
+      text: "Alex Kim's Refund Request for Intro to Rust was approved",
       href: "/instructor/analytics",
     });
   });

@@ -9,9 +9,9 @@ import {
   sendWithRetries,
   type Db,
 } from "./deliver.server";
+import type { RefundDecision } from "./descriptions/define";
 import type {
   RefundApprovedOnYourCourseData,
-  RefundDecision,
   RefundRequestApprovedData,
   RefundRequestDeclinedData,
   RefundRequestToDecideData,

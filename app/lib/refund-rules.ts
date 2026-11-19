@@ -6,6 +6,11 @@ export const REFUND_WINDOW_DAYS = 14;
 export const REFUND_WATCH_LIMIT_SECONDS = 60 * 60;
 export const REFUND_COMPLETION_LIMIT = 0.5;
 
+// There is no column saying which kind a Purchase is: a Team Licence is the
+// Purchase that granted Seats, and every Team Licence grants at least one.
+export const PURCHASE_KINDS = ["individual_purchase", "team_licence"] as const;
+export type PurchaseKind = (typeof PURCHASE_KINDS)[number];
+
 export type RuleBreak =
   | "window_closed"
   | "watched_too_much"

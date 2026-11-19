@@ -1,18 +1,10 @@
 import { z } from "zod";
 import { formatPrice } from "~/lib/utils";
-import { defineKind, type KindDescribers } from "./define";
+import { PURCHASE_KINDS, type PurchaseKind } from "~/lib/refund-rules";
+import { defineKind, type KindDescribers, type RefundDecision } from "./define";
 
 // Refund Request approved, Refund Request declined, Refund approved on your
 // course, Refund Request to decide (#25).
-
-/**
- * How a Refund Request was decided, looked up from Cadence when the list is
- * rendered: a provider can't change a Notification after sending it.
- */
-export type RefundDecision = {
-  status: "approved" | "declined";
-  decidedByName: string;
-};
 
 export const refundRequestToDecideData = z.object({
   key: z.string(),
@@ -30,13 +22,10 @@ const DECIDED_LABELS: Record<RefundDecision["status"], string> = {
   declined: "Declined",
 };
 
-const purchaseKind = z.enum(["individual_purchase", "team_licence"]);
+const purchaseKind = z.enum(PURCHASE_KINDS);
 
 /** Where a buyer goes to see the Purchase the Refund Request was about. */
-function buyerHref(
-  kind: z.infer<typeof purchaseKind>,
-  courseSlug: string
-): string {
+function buyerHref(kind: PurchaseKind, courseSlug: string): string {
   return kind === "team_licence" ? "/team" : `/courses/${courseSlug}`;
 }
 
@@ -86,7 +75,7 @@ export const refundDescribers: KindDescribers = {
   "refund-approved-on-your-course": defineKind(
     refundApprovedOnYourCourseData,
     (data) => ({
-      text: `A refund of ${data.courseTitle} for ${data.buyerName} was approved`,
+      text: `${data.buyerName}'s Refund Request for ${data.courseTitle} was approved`,
       href: "/instructor/analytics",
     })
   ),

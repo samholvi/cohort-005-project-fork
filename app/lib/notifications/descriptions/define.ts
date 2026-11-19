@@ -1,6 +1,6 @@
 import type { z } from "zod";
 import type { NotificationKind } from "../kinds";
-import type { RefundDecision } from "./refunds";
+import type { RefundStatus } from "~/db/schema";
 
 /**
  * What a Notification row shows. `text` is plain text: render it as a React
@@ -12,6 +12,15 @@ export type NotificationDescription = {
   text: string;
   href: string | null;
   note?: string;
+};
+
+/**
+ * How a Refund Request was decided, looked up from Cadence when the list is
+ * rendered: a provider can't change a Notification after sending it.
+ */
+export type RefundDecision = {
+  status: Exclude<RefundStatus, RefundStatus.Open>;
+  decidedByName: string;
 };
 
 /**
