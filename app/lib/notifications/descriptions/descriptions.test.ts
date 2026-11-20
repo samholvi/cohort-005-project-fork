@@ -229,6 +229,35 @@ describe("describeNotification", () => {
     });
   });
 
+  describe("New lesson", () => {
+    it("names the course and the lesson, and links to the lesson", () => {
+      const result = describeNotification(
+        notification("new-lesson", {
+          courseTitle: "JavaScript Basics",
+          lessonTitle: "Closures",
+          lessonId: 12,
+          courseSlug: "javascript-basics",
+        })
+      );
+
+      expect(result).toEqual({
+        text: "New lesson in JavaScript Basics: Closures",
+        href: "/courses/javascript-basics/lessons/12",
+      });
+    });
+
+    it("gives the generic row when the data is malformed", () => {
+      const result = describeNotification(
+        notification("new-lesson", { courseTitle: "JavaScript Basics" })
+      );
+
+      expect(result).toEqual({
+        text: "You have a new Notification",
+        href: null,
+      });
+    });
+  });
+
   it("gives the generic row for an unknown kind", () => {
     const result = describeNotification(
       notification("something-new", { anything: true })
