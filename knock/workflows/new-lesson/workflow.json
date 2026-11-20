@@ -1,0 +1,16 @@
+{
+  "name": "New lesson",
+  "description": "Cadence kind \"new-lesson\". Cadence renders the text itself, so the template is a placeholder.",
+  "steps": [
+    {
+      "ref": "in_app_feed_1",
+      "type": "channel",
+      "name": "In-app",
+      "channel_key": "in-app",
+      "template": {
+        "markdown_body": "New lesson",
+        "action_url": "/"
+      }
+    }
+  ]
+}
