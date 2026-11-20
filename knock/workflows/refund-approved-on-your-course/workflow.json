@@ -1,0 +1,16 @@
+{
+  "name": "Refund approved on your course",
+  "description": "Cadence kind \"refund-approved-on-your-course\". Cadence renders the text itself, so the template is a placeholder.",
+  "steps": [
+    {
+      "ref": "in_app_feed_1",
+      "type": "channel",
+      "name": "In-app",
+      "channel_key": "in-app",
+      "template": {
+        "markdown_body": "Refund approved on your course",
+        "action_url": "/"
+      }
+    }
+  ]
+}

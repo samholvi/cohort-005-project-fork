@@ -173,6 +173,62 @@ describe("describeNotification", () => {
     });
   });
 
+  describe("New question", () => {
+    it("names who asked and the lesson, and opens the Questions page at it", () => {
+      const result = describeNotification(
+        notification("new-question", {
+          actorName: "Alex Kim",
+          lessonTitle: "Closures",
+          commentId: 41,
+        })
+      );
+
+      expect(result).toEqual({
+        text: "Alex Kim asked a question on Closures",
+        href: "/instructor/questions#question-41",
+      });
+    });
+
+    it("gives the generic row when the data is malformed", () => {
+      const result = describeNotification(
+        notification("new-question", { actorName: "Alex Kim" })
+      );
+
+      expect(result).toEqual({ text: "You have a new Notification", href: null });
+    });
+  });
+
+  describe("New rating", () => {
+    it("names who rated, the course and the stars, and opens the course page", () => {
+      const result = describeNotification(
+        notification("new-rating", {
+          actorName: "Alex Kim",
+          courseTitle: "JavaScript Basics",
+          courseSlug: "javascript-basics",
+          rating: 4,
+        })
+      );
+
+      expect(result).toEqual({
+        text: "Alex Kim rated JavaScript Basics ★4",
+        href: "/courses/javascript-basics",
+      });
+    });
+
+    it("gives the generic row when the stars are out of range", () => {
+      const result = describeNotification(
+        notification("new-rating", {
+          actorName: "Alex Kim",
+          courseTitle: "JavaScript Basics",
+          courseSlug: "javascript-basics",
+          rating: 9,
+        })
+      );
+
+      expect(result).toEqual({ text: "You have a new Notification", href: null });
+    });
+  });
+
   it("gives the generic row for an unknown kind", () => {
     const result = describeNotification(
       notification("something-new", { anything: true })
