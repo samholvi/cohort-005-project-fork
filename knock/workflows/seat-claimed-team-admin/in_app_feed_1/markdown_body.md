@@ -1,0 +1,1 @@
+Seat claimed (Team Admin)
