@@ -1,12 +1,16 @@
 import { Outlet } from "react-router";
 import type { Route } from "./+types/layout.app";
 import { Sidebar } from "~/components/sidebar";
+import { NotificationBell } from "~/components/notification-bell";
+import { NotificationFeedProvider } from "~/lib/notifications/feed";
+import { feedSessionFor } from "~/lib/notifications/feed-session.server";
 import { DevUI } from "~/components/dev-ui";
 import { Toaster } from "sonner";
 import { getCurrentUserId, getDevCountry } from "~/lib/session";
 import { getCountryTierInfo, COUNTRIES } from "~/lib/ppp";
 import { eq, and, or, sql, desc } from "drizzle-orm";
 import { db } from "~/db";
+import { runInactivityCheck } from "~/lib/notifications/inactivity.server";
 import {
   users,
   courses,
@@ -178,6 +182,9 @@ export async function loader({ request }: Route.LoaderArgs) {
   const devCountry = await getDevCountry(request);
   const countryTierInfo = getCountryTierInfo(devCountry);
 
+  // Not awaited: the check never rejects and must not slow the page.
+  if (currentUserId) void runInactivityCheck(db, currentUserId, new Date());
+
   const recentCourses = currentUserId
     ? getRecentlyProgressedCourses(currentUserId).map((course) => {
         const completedLessons = getCompletedLessonCount(
@@ -213,6 +220,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     countryTierInfo,
     countries: COUNTRIES,
     isTeamAdmin: currentUserId ? isTeamAdmin(currentUserId) : false,
+    feedSession: await feedSessionFor(db, currentUserId),
   };
 }
 
@@ -225,15 +233,19 @@ export default function AppLayout({ loaderData }: Route.ComponentProps) {
     countryTierInfo,
     countries,
     isTeamAdmin: userIsTeamAdmin,
+    feedSession,
   } = loaderData;
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar
-        currentUser={currentUser}
-        recentCourses={recentCourses}
-        isTeamAdmin={userIsTeamAdmin}
-      />
+      <NotificationFeedProvider session={feedSession}>
+        <Sidebar
+          currentUser={currentUser}
+          recentCourses={recentCourses}
+          isTeamAdmin={userIsTeamAdmin}
+          bell={<NotificationBell />}
+        />
+      </NotificationFeedProvider>
       <main className="flex-1 overflow-y-auto">
         <Outlet />
       </main>

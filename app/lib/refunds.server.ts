@@ -21,6 +21,7 @@ import {
   REFUND_COMPLETION_LIMIT,
   REFUND_WATCH_LIMIT_SECONDS,
   REFUND_WINDOW_DAYS,
+  type PurchaseKind,
   type RuleBreak,
 } from "~/lib/refund-rules";
 
@@ -81,12 +82,17 @@ function isClaimed(seat: Seat) {
   return seat.redeemedAt !== null;
 }
 
-// There is no column saying which kind a Purchase is: a Team Licence is the
-// Purchase that granted Seats, and every Team Licence grants at least one.
-export type PurchaseKind = "individual_purchase" | "team_licence";
+export type { PurchaseKind };
 
 function kindOf(seats: Seat[]): PurchaseKind {
   return seats.length > 0 ? "team_licence" : "individual_purchase";
+}
+
+export function getPurchaseKind(
+  db: Queryable,
+  purchaseId: number
+): PurchaseKind {
+  return kindOf(getSeats(db, purchaseId));
 }
 
 function getRefundRequestWithStatus(

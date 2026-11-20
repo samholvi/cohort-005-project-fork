@@ -1,0 +1,16 @@
+{
+  "name": "Refund Request approved",
+  "description": "Cadence kind \"refund-request-approved\". Cadence renders the text itself, so the template is a placeholder.",
+  "steps": [
+    {
+      "ref": "in_app_feed_1",
+      "type": "channel",
+      "name": "In-app",
+      "channel_key": "in-app",
+      "template": {
+        "markdown_body": "Refund Request approved",
+        "action_url": "/"
+      }
+    }
+  ]
+}

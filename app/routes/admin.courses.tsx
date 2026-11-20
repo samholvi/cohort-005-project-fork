@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { Route } from "./+types/admin.courses";
 import { getCurrentUserId } from "~/lib/session";
 import { parseFormData } from "~/lib/validation";
+import { notifyCourseStatusChange } from "~/lib/notifications/course-status.server";
 import {
   UserRole,
   CourseStatus,
@@ -73,6 +74,14 @@ function getEnrollmentCountForCourse(courseId: number) {
   return result?.count ?? 0;
 }
 
+function getCourseStatus(id: number) {
+  return db
+    .select({ status: courses.status })
+    .from(courses)
+    .where(eq(courses.id, id))
+    .get()?.status;
+}
+
 function updateCourseStatus(id: number, status: CourseStatus) {
   return db
     .update(courses)
@@ -139,7 +148,18 @@ export async function action({ request }: Route.ActionArgs) {
   const { intent } = parsed.data;
 
   if (intent === "update-status") {
+    const previousStatus = getCourseStatus(parsed.data.courseId);
+    if (!previousStatus) {
+      throw data("Course not found.", { status: 404 });
+    }
     updateCourseStatus(parsed.data.courseId, parsed.data.status);
+    void notifyCourseStatusChange(
+      db,
+      parsed.data.courseId,
+      previousStatus,
+      currentUserId,
+      new Date()
+    );
     return { success: true };
   }
 

@@ -11,6 +11,8 @@ import {
 } from "~/components/comment-thread";
 import { MIN_COMMENT_LENGTH, MAX_COMMENT_LENGTH } from "~/lib/comments";
 import { db } from "~/db";
+import { notifyCommentReply } from "~/lib/notifications/comments.server";
+import { notifyNewQuestion } from "~/lib/notifications/engagement.server";
 import {
   categories,
   comments,
@@ -900,12 +902,14 @@ export async function action({ params, request }: Route.ActionArgs) {
         if (!parsed.success) {
           return { ok: false, error: "Enter a comment before posting." };
         }
-        createComment(
+        const created = createComment(
           currentUserId,
           lessonId,
           parsed.data.parentId ?? null,
           parsed.data.body
         );
+        void notifyCommentReply(db, created.id, currentUserId, new Date());
+        void notifyNewQuestion(db, created.id, currentUserId, new Date());
         return { ok: true };
       }
 
