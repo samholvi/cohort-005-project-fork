@@ -18,6 +18,7 @@ import {
 } from "~/db/schema";
 import { eq, and, or, sql } from "drizzle-orm";
 import { getRefundOffer, type RefundOffer } from "~/lib/refunds.server";
+import { notifyNewRating } from "~/lib/notifications/engagement.server";
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Skeleton } from "~/components/ui/skeleton";
@@ -475,7 +476,8 @@ export async function action({ params, request }: Route.ActionArgs) {
     return { ok: false as const, error: "Please choose a rating from 1 to 5." };
   }
 
-  rateCourse(currentUserId, course.id, parsed.data.rating);
+  const courseRating = rateCourse(currentUserId, course.id, parsed.data.rating);
+  void notifyNewRating(db, courseRating.id, currentUserId, new Date());
 
   return { ok: true as const, error: null };
 }
