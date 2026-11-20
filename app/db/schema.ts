@@ -113,6 +113,7 @@ export const lessons = sqliteTable("lessons", {
   githubRepoUrl: text("github_repo_url"),
   position: integer("position").notNull(),
   durationMinutes: integer("duration_minutes"),
+  studentsNotifiedAt: text("students_notified_at"),
   createdAt: text("created_at")
     .notNull()
     .$defaultFn(() => new Date().toISOString()),
@@ -132,6 +133,7 @@ export const enrollments = sqliteTable(
       .notNull()
       .$defaultFn(() => new Date().toISOString()),
     completedAt: text("completed_at"),
+    inactivityNotifiedAt: text("inactivity_notified_at"),
   },
   (table) => [index("enrollments_course_idx").on(table.courseId)]
 );
