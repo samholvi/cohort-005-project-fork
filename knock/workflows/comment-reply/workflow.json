@@ -1,0 +1,16 @@
+{
+  "name": "Reply to your comment",
+  "description": "Cadence kind \"comment-reply\". Cadence renders the text itself, so the template is a placeholder.",
+  "steps": [
+    {
+      "ref": "in_app_feed_1",
+      "type": "channel",
+      "name": "In-app",
+      "channel_key": "in-app",
+      "template": {
+        "markdown_body": "Reply to your comment",
+        "action_url": "/"
+      }
+    }
+  ]
+}

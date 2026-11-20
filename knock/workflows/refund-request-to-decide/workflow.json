@@ -1,0 +1,16 @@
+{
+  "name": "Refund Request to decide",
+  "description": "Cadence kind \"refund-request-to-decide\". Cadence renders the text itself, so the template is a placeholder.",
+  "steps": [
+    {
+      "ref": "in_app_feed_1",
+      "type": "channel",
+      "name": "In-app",
+      "channel_key": "in-app",
+      "template": {
+        "markdown_body": "Refund Request to decide",
+        "action_url": "/"
+      }
+    }
+  ]
+}

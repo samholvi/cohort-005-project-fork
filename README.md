@@ -81,7 +81,7 @@ It needs to be public: GitHub Actions minutes are free on public repos, and the 
 
 You don't need these yet, but you'll be asked for them along the way. Both have a free option:
 
-- **[Knock](https://knock.app/)**, a free Developer account, when you build notifications. Its keys go in `.env`, which is gitignored.
+- **[Knock](https://knock.app/)**, a free Developer account, when you build notifications. Its keys go in `.env`, which is gitignored; `.env.example` lists the `KNOCK_*` variables. Without them, Notifications are written to `.notifications/` instead. The Knock workflows live in `knock/workflows/`, one per notification kind; push them to Development with `npm run knock:push` (needs `KNOCK_SERVICE_TOKEN` exported in your shell).
 - **[tldraw](https://www.tldraw.com/)**, for whiteboarding your tasks. Any drawing app will do.
 
 ## Scripts
@@ -96,6 +96,7 @@ You don't need these yet, but you'll be asked for them along the way. Both have 
 | `npm run db:generate`        | Generate a migration from the schema         |
 | `npm run db:migrate`         | Run database migrations                      |
 | `npm run db:seed`            | Reseed the database (drops and recreates it) |
+| `npm run knock:push`         | Push and commit the Knock workflows          |
 | `npm run reset <slug>`       | Reset your repo to a lesson checkpoint       |
 | `npm run cherry-pick <slug>` | Cherry-pick a lesson's solution              |
 | `npm run pull`               | Merge the course repo's latest `main` in     |
