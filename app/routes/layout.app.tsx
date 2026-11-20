@@ -7,6 +7,7 @@ import { getCurrentUserId, getDevCountry } from "~/lib/session";
 import { getCountryTierInfo, COUNTRIES } from "~/lib/ppp";
 import { eq, and, or, sql, desc } from "drizzle-orm";
 import { db } from "~/db";
+import { runInactivityCheck } from "~/lib/notifications/inactivity.server";
 import {
   users,
   courses,
@@ -177,6 +178,9 @@ export async function loader({ request }: Route.LoaderArgs) {
   const currentUser = currentUserId ? getUserById(currentUserId) : null;
   const devCountry = await getDevCountry(request);
   const countryTierInfo = getCountryTierInfo(devCountry);
+
+  // Not awaited: the check never rejects and must not slow the page.
+  if (currentUserId) void runInactivityCheck(db, currentUserId, new Date());
 
   const recentCourses = currentUserId
     ? getRecentlyProgressedCourses(currentUserId).map((course) => {
